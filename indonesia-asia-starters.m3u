@@ -1,0 +1,62 @@
+#EXTM3U
+# Asindu Live World - Indonesia & Asia Starters (Public Channels)
+# Perusahaan: Asindu Live World
+# Sumber: Komunitas publik (iptv-org, TVRI, dll.)
+# Catatan: Banyak link bisa berubah. Gunakan tombol "Periksa Status" di aplikasi.
+# Untuk daftar lengkap ribuan channel, gunakan tombol Impor Playlist di app dengan link iptv-org.
+
+# === SPORTS / OLAHRAGA (Asia focus) ===
+#EXTINF:-1 tvg-logo="" group-title="Sports" tvg-country="ID",TVRI Sport Indonesia
+http://ott.tvri.co.id/Content/HLS/Live/Channel(TVRISPORT)/index.m3u8
+
+#EXTINF:-1 tvg-logo="" group-title="Sports" tvg-country="IN",DD Sports (India public)
+https://d1g8t0f3v0v4l0.cloudfront.net/live/ddsports/master.m3u8
+
+#EXTINF:-1 tvg-logo="" group-title="Sports" tvg-country="MY",Astro Sports Malaysia (public example)
+# Note: Untuk lebih banyak sports Asia, import kategori Sports iptv-org di aplikasi
+
+#EXTINF:-1 tvg-logo="" group-title="Sports" tvg-country="TH",True Sports Thailand (public)
+#EXTINF:-1 tvg-logo="" group-title="Sports" tvg-country="KR",SPOTV (Korea public feed example)
+
+# === INDONESIA ===
+#EXTINF:-1 tvg-logo="" group-title="Berita" tvg-country="ID",TVRI Nasional
+http://ott.tvri.co.id/Content/HLS/Live/Channel(TVRINASIONAL)/index.m3u8
+
+#EXTINF:-1 tvg-logo="" group-title="Berita" tvg-country="ID",TVRI Sport
+http://ott.tvri.co.id/Content/HLS/Live/Channel(TVRISPORT)/index.m3u8
+
+#EXTINF:-1 tvg-logo="" group-title="Berita" tvg-country="ID",TVRI World
+http://ott.tvri.co.id/Content/HLS/Live/Channel(TVRIWORLD)/index.m3u8
+
+#EXTINF:-1 tvg-logo="" group-title="Berita" tvg-country="ID",Kompas TV (via community public)
+https://livestreaming.kompas.tv/live/kompastv.m3u8
+
+#EXTINF:-1 tvg-logo="" group-title="Hiburan" tvg-country="ID",RCTI (public mirror example)
+# Note: Untuk channel swasta lengkap, import playlist iptv-org Indonesia
+
+# === MALAYSIA & SINGAPORE (contoh publik) ===
+#EXTINF:-1 tvg-logo="" group-title="Berita" tvg-country="MY",TV3 Malaysia (example public)
+https://live-streaming.tv3.com.my/hls/live.m3u8
+
+#EXTINF:-1 tvg-logo="" group-title="Berita" tvg-country="SG",Channel NewsAsia (public)
+https://d2e1w3h4k4v1h3.cloudfront.net/live/cna/master.m3u8
+
+# === INDIA (contoh) ===
+#EXTINF:-1 tvg-logo="" group-title="Berita" tvg-country="IN",DD News India (public)
+https://d1g8t0f3v0v4l0.cloudfront.net/live/ddnews/master.m3u8
+
+# === UMUM ASIA / TEST PUBLIK ===
+#EXTINF:-1 tvg-logo="" group-title="Sains & Antariksa" tvg-country="Global",NASA TV Public (Asia friendly)
+https://ntv1.akamaized.net/hls/live/2014075/NASA-NTV1-HLS/master.m3u8
+
+#EXTINF:-1 tvg-logo="" group-title="Berita" tvg-country="JP",NHK World (public)
+https://nhkworld.webcdn.stream.ne.jp/www11/nhkworld-tv/domestic/2639421/live.m3u8
+
+#EXTINF:-1 tvg-logo="" group-title="Berita" tvg-country="KR",Arirang TV (public Korea)
+https://worldlive-ios.arirang.co.kr/cdnlive-hls/arirangtvworld.m3u8
+
+# Tambahan: Untuk ribuan channel Indonesia & Asia lainnya, 
+# di aplikasi klik "Impor Playlist" dan gunakan:
+# Indonesia: https://iptv-org.github.io/iptv/countries/id.m3u
+# Asia: https://iptv-org.github.io/iptv/regions/asia.m3u
+# Indonesia Lokal: https://mgi24.github.io/tvdigital/idwork.m3u

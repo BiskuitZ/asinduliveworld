@@ -1,0 +1,2315 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Asindu Live World • Siaran Langsung Dunia Gratis</title>
+    
+    <!-- SEO & Social Meta (for GitHub Pages) -->
+    <meta name="description" content="Asindu Live World - Nonton siaran TV langsung gratis dari Indonesia dan seluruh dunia. Player HLS modern dengan status live/offline.">
+    <meta name="keywords" content="TV gratis, siaran langsung, live TV Indonesia, IPTV, Asindu Live World, channel Indonesia, streaming gratis">
+    <meta name="author" content="Asindu Live World">
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:title" content="Asindu Live World - Siaran Langsung Gratis">
+    <meta property="og:description" content="Aplikasi web untuk menonton TV live dari Indonesia dan Asia secara gratis. Pilih channel, cek status aktif, dan tonton dengan player berkualitas.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://YOUR_USERNAME.github.io/asindu-live-world">
+    <meta property="og:image" content="https://YOUR_USERNAME.github.io/asindu-live-world/og-image.png">
+    <!-- GANTI YOUR_USERNAME dengan username GitHub Anda setelah deploy -->
+    
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Asindu Live World">
+    <meta name="twitter:description" content="Nonton TV live gratis Indonesia & Asia. Status real-time, player HLS, mudah digunakan.">
+    
+    <!-- Theme Color -->
+    <meta name="theme-color" content="#1e2937">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest/dist/hls.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&amp;family=Space+Grotesk:wght@500;600&amp;display=swap');
+        
+        :root {
+            --primary: #3b82f6;
+        }
+        
+        body {
+            font-family: 'Inter', system_ui, sans-serif;
+        }
+        
+        .font-display {
+            font-family: 'Space Grotesk', 'Inter', system_ui, sans-serif;
+            font-weight: 600;
+        }
+
+        .tv-gradient {
+            background: linear-gradient(145deg, #0f172a 0%, #020617 100%);
+        }
+
+        .channel-card {
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .channel-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+        }
+
+        .channel-card .status-dot {
+            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        .section-header {
+            font-size: 0.75rem;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            font-weight: 600;
+        }
+
+        .nav-active {
+            background-color: #1e2937;
+            color: white;
+            border-radius: 8px;
+        }
+
+        .modal {
+            animation: modalPop 0.2s ease-out forwards;
+        }
+
+        @keyframes modalPop {
+            from {
+                opacity: 0;
+                transform: scale(0.95) translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+
+        .stream-player video {
+            background: #000;
+            border-radius: 12px;
+            width: 100%;
+            max-height: 70vh;
+            outline: none;
+        }
+
+        .channel-logo {
+            background: linear-gradient(135deg, #1e2937, #334155);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            color: #64748b;
+            font-size: 1.1rem;
+            letter-spacing: -0.02em;
+        }
+
+        .live-badge {
+            background: linear-gradient(to right, #22c55e, #16a34a);
+            box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.2);
+        }
+
+        .filter-chip {
+            transition: all 0.1s ease;
+        }
+
+        .filter-chip.active {
+            background-color: #3b82f6;
+            color: white;
+            border-color: #3b82f6;
+        }
+
+        .toast {
+            animation: toastSlide 0.3s ease forwards;
+        }
+
+        .channel-grid {
+            scrollbar-width: thin;
+            scrollbar-color: #334155 #0f172a;
+        }
+
+        .stat-number {
+            font-variant-numeric: tabular-nums;
+        }
+
+        .mini-player {
+            box-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.4);
+        }
+
+        .nav-item {
+            transition: all 0.1s ease;
+        }
+        
+        .nav-item:hover {
+            background-color: #1e2937;
+        }
+
+        .status-live { color: #22c55e; }
+        .status-offline { color: #ef4444; }
+        .status-unknown { color: #64748b; }
+
+        .app-container {
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        .logo-glow {
+            box-shadow: 0 0 15px rgba(59, 130, 246, 0.3);
+        }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-200 tv-gradient min-h-screen">
+    <!-- Header -->
+    <header class="border-b border-slate-800 bg-slate-900/80 backdrop-blur-lg sticky top-0 z-50">
+        <div class="app-container px-6 py-4 flex items-center justify-between">
+            <div class="flex items-center gap-x-3">
+                <div class="flex items-center justify-center w-11 h-11 bg-blue-600 rounded-2xl logo-glow">
+                    <i class="fa-solid fa-satellite text-white text-2xl"></i>
+                </div>
+                <div>
+                    <h1 class="font-display text-3xl font-semibold tracking-tighter">Asindu Live World</h1>
+                    <p class="text-[10px] text-slate-500 -mt-1">SIARAN LANGSUNG GRATIS • DUNIA</p>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-x-2">
+                <!-- Stats -->
+                <div class="hidden md:flex items-center gap-x-5 text-sm bg-slate-900 border border-slate-800 rounded-2xl px-5 py-2">
+                    <div class="flex items-center gap-x-1.5">
+                        <span class="text-slate-400">Total</span>
+                        <span id="stat-total" class="font-semibold stat-number text-lg">0</span>
+                    </div>
+                    <div class="w-px h-3.5 bg-slate-700"></div>
+                    <div class="flex items-center gap-x-1.5">
+                        <i class="fa-solid fa-circle text-emerald-500 text-xs"></i>
+                        <span class="text-slate-400">Live</span>
+                        <span id="stat-live" class="font-semibold text-emerald-400 stat-number text-lg">0</span>
+                    </div>
+                    <div class="flex items-center gap-x-1.5">
+                        <i class="fa-solid fa-circle text-red-500 text-xs"></i>
+                        <span class="text-slate-400">Offline</span>
+                        <span id="stat-offline" class="font-semibold text-red-400 stat-number text-lg">0</span>
+                    </div>
+                </div>
+
+                <!-- Header actions -->
+                <button onclick="showAddChannelModal()" 
+                        class="flex items-center gap-x-2 px-4 py-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-2xl text-sm font-medium transition-colors">
+                    <i class="fa-solid fa-plus"></i>
+                    <span class="hidden sm:inline">Tambah Channel</span>
+                </button>
+                
+                <button onclick="showImportModal()" 
+                        class="flex items-center gap-x-2 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-2xl text-sm font-medium transition-colors shadow-lg shadow-blue-600/30">
+                    <i class="fa-solid fa-download"></i>
+                    <span class="hidden sm:inline">Impor Playlist</span>
+                </button>
+
+                <div class="relative group">
+                    <button onclick="showSettingsModal()" class="w-10 h-10 flex items-center justify-center text-slate-400 hover:text-white hover:bg-slate-800 rounded-2xl transition-colors border border-slate-800">
+                        <i class="fa-solid fa-cog"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="app-container px-6 pt-6 pb-10 flex gap-6">
+        <!-- Sidebar Filters -->
+        <div class="w-72 hidden lg:flex flex-col gap-y-2 flex-shrink-0 max-h-[88vh] overflow-y-auto pr-1">
+            <div class="bg-slate-900 border border-slate-800 rounded-3xl p-4">
+                <div class="section-header px-3 mb-3 text-slate-500">Filter</div>
+                
+                <!-- Quick Filters -->
+                <div class="space-y-1 text-sm">
+                    <div onclick="setActiveFilter('all')" class="nav-item flex items-center gap-x-3 px-3 py-2.5 rounded-2xl cursor-pointer nav-active" id="filter-all">
+                        <i class="fa-solid fa-th-large w-4"></i>
+                        <span>Semua Channel</span>
+                    </div>
+                    <div onclick="setActiveFilter('live')" class="nav-item flex items-center gap-x-3 px-3 py-2.5 rounded-2xl cursor-pointer" id="filter-live">
+                        <i class="fa-solid fa-play text-emerald-500 w-4"></i>
+                        <span>Hanya yang Live</span>
+                    </div>
+                    <div onclick="setActiveFilter('favorites')" class="nav-item flex items-center gap-x-3 px-3 py-2.5 rounded-2xl cursor-pointer" id="filter-favorites">
+                        <i class="fa-solid fa-heart text-pink-500 w-4"></i>
+                        <span>Favorit</span>
+                    </div>
+                    <div onclick="setActiveFilter('offline')" class="nav-item flex items-center gap-x-3 px-3 py-2.5 rounded-2xl cursor-pointer" id="filter-offline">
+                        <i class="fa-solid fa-exclamation-triangle text-red-500 w-4"></i>
+                        <span>Offline / Mati</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Categories -->
+            <div class="bg-slate-900 border border-slate-800 rounded-3xl p-4">
+                <div class="section-header px-3 mb-1.5 text-slate-500 flex items-center justify-between">
+                    <span>KATEGORI</span>
+                    <span id="cat-count" class="text-[10px] text-slate-600">—</span>
+                </div>
+                <input id="cat-search" type="text" placeholder="Cari kategori..." 
+                       class="w-full bg-slate-950 border border-slate-700 text-xs rounded-xl px-3 py-1.5 mb-2 placeholder:text-slate-500 focus:border-blue-500">
+                <div id="category-list" class="space-y-0.5 text-sm max-h-56 overflow-y-auto pr-1 channel-grid">
+                    <!-- Populated by JS -->
+                </div>
+            </div>
+
+            <!-- Quick Public Sources -->
+            <div class="bg-slate-900 border border-slate-800 rounded-3xl p-4">
+                <div class="section-header px-3 mb-2.5 text-slate-500">SUMBER PUBLIK CEPAT</div>
+                <div class="grid grid-cols-1 gap-1.5 text-xs">
+                    <button onclick="quickImport('https://iptv-org.github.io/iptv/categories/news.m3u', 'News')" 
+                            class="flex justify-between items-center bg-slate-800 hover:bg-slate-700 px-3 py-2 rounded-2xl transition-colors text-left">
+                        <span><i class="fa-solid fa-newspaper mr-2 text-blue-400"></i> News Global</span>
+                    </button>
+                    <button onclick="quickImport('https://iptv-org.github.io/iptv/categories/sports.m3u', 'Sports')" 
+                            class="flex justify-between items-center bg-slate-800 hover:bg-slate-700 px-3 py-2 rounded-2xl transition-colors text-left">
+                        <span><i class="fa-solid fa-futbol mr-2 text-emerald-400"></i> Sports</span>
+                    </button>
+                    <button onclick="quickImport('https://iptv-org.github.io/iptv/categories/entertainment.m3u', 'Entertainment')" 
+                            class="flex justify-between items-center bg-slate-800 hover:bg-slate-700 px-3 py-2 rounded-2xl transition-colors text-left">
+                        <span><i class="fa-solid fa-tv mr-2 text-purple-400"></i> Entertainment</span>
+                    </button>
+                    <button onclick="quickImport('https://raw.githubusercontent.com/Free-TV/IPTV/master/playlist.m3u8', 'Free-TV')" 
+                            class="flex justify-between items-center bg-slate-800 hover:bg-slate-700 px-3 py-2 rounded-2xl transition-colors text-left">
+                        <span><i class="fa-solid fa-globe mr-2 text-amber-400"></i> Free-TV Curated</span>
+                    </button>
+                </div>
+                <div class="mt-3 text-[10px] text-center text-slate-500">
+                    Sumber dari iptv-org &amp; Free-TV (publik)
+                </div>
+            </div>
+
+            <!-- Indonesia & Asia Special Pack (added by Grok) -->
+            <div class="bg-slate-900 border border-emerald-700/50 rounded-3xl p-4 mt-3">
+                <div class="section-header px-3 mb-2.5 text-emerald-400 flex items-center gap-x-2">
+                    <i class="fa-solid fa-globe-asia-australia"></i>
+                    <span>INDONESIA &amp; ASIA • ASINDU</span>
+                </div>
+                <div class="grid grid-cols-1 gap-1.5 text-xs">
+                    <button onclick="quickImport('https://iptv-org.github.io/iptv/countries/id.m3u', 'Indonesia')" 
+                            class="flex justify-between items-center bg-emerald-900/30 hover:bg-emerald-800/40 border border-emerald-700/50 px-3 py-2 rounded-2xl transition-colors text-left">
+                        <span><i class="fa-solid fa-flag mr-2 text-emerald-400"></i> <strong>Indonesia</strong> (iptv-org)</span>
+                    </button>
+                    <button onclick="quickImport('https://mgi24.github.io/tvdigital/idwork.m3u', 'Indonesia Lokal')" 
+                            class="flex justify-between items-center bg-emerald-900/30 hover:bg-emerald-800/40 border border-emerald-700/50 px-3 py-2 rounded-2xl transition-colors text-left">
+                        <span><i class="fa-solid fa-flag mr-2 text-emerald-400"></i> Indonesia Lokal (~128 ch)</span>
+                    </button>
+                    <button onclick="quickImport('https://iptv-org.github.io/iptv/regions/asia.m3u', 'Asia')" 
+                            class="flex justify-between items-center bg-emerald-900/30 hover:bg-emerald-800/40 border border-emerald-700/50 px-3 py-2 rounded-2xl transition-colors text-left">
+                        <span><i class="fa-solid fa-globe-asia-australia mr-2 text-emerald-400"></i> <strong>Asia</strong> (ribuan ch)</span>
+                    </button>
+                    <button onclick="quickImport('https://iptv-org.github.io/iptv/regions/apac.m3u', 'Asia-Pacific')" 
+                            class="flex justify-between items-center bg-emerald-900/30 hover:bg-emerald-800/40 border border-emerald-700/50 px-3 py-2 rounded-2xl transition-colors text-left">
+                        <span><i class="fa-solid fa-globe mr-2 text-emerald-400"></i> Asia-Pacific</span>
+                    </button>
+                    <button onclick="loadIndonesiaAsiaPack()" 
+                            class="flex justify-between items-center bg-blue-600 hover:bg-blue-500 px-3 py-2 rounded-2xl transition-colors text-left text-white font-medium">
+                        <span><i class="fa-solid fa-magic mr-2"></i> Muat Paket Starter ID + Asia (langsung)</span>
+                    </button>
+                </div>
+                <div class="mt-2 text-[10px] text-center text-emerald-500/70">
+                    Paket siap pakai + full list via Impor
+                </div>
+            </div>
+
+            <!-- Sports Asia Quick (added to increase options) -->
+            <div class="bg-slate-900 border border-orange-700/50 rounded-3xl p-4 mt-3">
+                <div class="section-header px-3 mb-2.5 text-orange-400 flex items-center gap-x-2">
+                    <i class="fa-solid fa-futbol"></i>
+                    <span>SPORTS ASIA - PERBANYAK CHANNEL</span>
+                </div>
+                <div class="grid grid-cols-1 gap-1.5 text-xs">
+                    <button onclick="quickImport('https://iptv-org.github.io/iptv/categories/sports.m3u', 'Sports Global/Asia')" 
+                            class="flex justify-between items-center bg-orange-900/30 hover:bg-orange-800/40 border border-orange-700/50 px-3 py-2 rounded-2xl transition-colors text-left font-medium">
+                        <span><i class="fa-solid fa-futbol mr-2 text-orange-400"></i> Sports Global &amp; Asia (iptv-org)</span>
+                    </button>
+                    <button onclick="quickImport('https://iptv-org.github.io/iptv/index.m3u', 'All + Sports'); filterSportsAfterImport()" 
+                            class="flex justify-between items-center bg-orange-900/30 hover:bg-orange-800/40 border border-orange-700/50 px-3 py-2 rounded-2xl transition-colors text-left">
+                        <span><i class="fa-solid fa-globe mr-2 text-orange-400"></i> Semua Channel + Sports</span>
+                    </button>
+                    <button onclick="loadSportsAsiaPack()" 
+                            class="flex justify-between items-center bg-orange-600 hover:bg-orange-500 px-3 py-2 rounded-2xl transition-colors text-left text-white font-medium">
+                        <span><i class="fa-solid fa-magic mr-2"></i> Muat Paket Sports Asia (langsung, lebih banyak)</span>
+                    </button>
+                </div>
+                <div class="mt-2 text-[10px] text-center text-orange-500/70">
+                    Import Sports → Periksa Status → Filter "Live Only" + cari "sport/football/cricket"
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="flex-1 min-w-0">
+            <!-- Toolbar -->
+            <div class="flex flex-col sm:flex-row gap-3 mb-5 items-start sm:items-center">
+                <!-- Search -->
+                <div class="flex-1 relative w-full">
+                    <i class="fa-solid fa-search absolute left-4 top-3.5 text-slate-500"></i>
+                    <input id="search-input" 
+                           onkeyup="if (event.key === 'Enter') filterChannels(); else debounceFilter()"
+                           type="text" 
+                           placeholder="Cari channel (nama, kategori, negara)..." 
+                           class="w-full bg-slate-900 border border-slate-700 focus:border-blue-500 transition-colors text-sm pl-11 py-3 rounded-2xl placeholder:text-slate-500">
+                </div>
+
+                <div class="flex items-center gap-x-2 flex-shrink-0">
+                    <!-- Sort -->
+                    <select id="sort-select" onchange="filterChannels()" 
+                            class="bg-slate-900 border border-slate-700 text-sm rounded-2xl px-4 py-[13px] focus:outline-none focus:border-blue-500">
+                        <option value="name">Urutkan: Nama A-Z</option>
+                        <option value="status">Urutkan: Status (Live dulu)</option>
+                        <option value="category">Urutkan: Kategori</option>
+                    </select>
+
+                    <!-- Bulk actions -->
+                    <button onclick="refreshAllStatuses()" 
+                            class="flex items-center gap-x-2 bg-slate-900 hover:bg-slate-800 border border-slate-700 px-4 h-[46px] rounded-2xl text-sm font-medium transition-colors">
+                        <i class="fa-solid fa-sync"></i>
+                        <span class="hidden md:inline">Periksa Status</span>
+                    </button>
+
+                    <button onclick="exportToM3U()" 
+                            class="flex items-center gap-x-2 bg-slate-900 hover:bg-slate-800 border border-slate-700 px-4 h-[46px] rounded-2xl text-sm font-medium transition-colors">
+                        <i class="fa-solid fa-upload"></i>
+                        <span class="hidden md:inline">Export M3U</span>
+                    </button>
+
+                    <button onclick="showAboutModal()" 
+                            class="w-11 h-11 flex items-center justify-center bg-slate-900 hover:bg-slate-800 border border-slate-700 rounded-2xl text-slate-400 hover:text-white">
+                        <i class="fa-solid fa-info"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Channels Grid -->
+            <div id="channels-container" 
+                 class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4 channel-grid min-h-[420px]">
+                <!-- Populated dynamically by JS -->
+            </div>
+
+            <!-- Empty state -->
+            <div id="empty-state" class="hidden flex flex-col items-center justify-center py-16 text-center">
+                <div class="w-16 h-16 bg-slate-900 rounded-full flex items-center justify-center mb-4">
+                    <i class="fa-solid fa-tv text-3xl text-slate-600"></i>
+                </div>
+                <h3 class="text-xl font-semibold mb-1">Tidak ada channel ditemukan</h3>
+                <p class="text-slate-400 max-w-xs mb-5">Coba ubah filter atau impor playlist publik untuk mulai menonton.</p>
+                <div class="flex gap-2">
+                    <button onclick="showImportModal()" class="px-5 py-2 bg-blue-600 hover:bg-blue-500 rounded-2xl text-sm font-medium">Impor Playlist</button>
+                    <button onclick="showAddChannelModal()" class="px-5 py-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-2xl text-sm font-medium">Tambah Manual</button>
+                </div>
+            </div>
+
+            <!-- Footer info -->
+            <div class="mt-8 flex justify-between items-center text-xs text-slate-500 px-1">
+                <div>
+                    <strong>Asindu Live World</strong> • Data disimpan di browser Anda. 
+                    <span class="hidden sm:inline">• Klik channel untuk langsung tonton.</span>
+                </div>
+                <div onclick="clearAllData()" class="cursor-pointer hover:text-red-400 transition-colors">Hapus Semua Data</div>
+            </div>
+            
+            <div class="mt-4 text-center text-[10px] text-slate-600">
+                Hosted with ❤️ on GitHub Pages • Asindu Live World
+            </div>
+        </div>
+    </div>
+
+    <!-- PLAYER MODAL -->
+    <div id="player-modal" onclick="if (event.target.id === 'player-modal') closePlayer()" class="hidden fixed inset-0 bg-black/90 z-[100] flex items-center justify-center p-4">
+        <div onclick="event.stopImmediatePropagation()" class="w-full max-w-6xl bg-slate-900 border border-slate-700 rounded-3xl overflow-hidden mini-player">
+            <!-- Player Header -->
+            <div class="flex items-center justify-between px-6 py-4 border-b border-slate-700 bg-slate-950">
+                <div class="flex items-center gap-x-3 min-w-0">
+                    <div id="player-logo" class="w-9 h-9 rounded-xl overflow-hidden flex-shrink-0 channel-logo text-sm"></div>
+                    <div class="min-w-0">
+                        <div id="player-channel-name" class="font-semibold text-lg truncate"></div>
+                        <div id="player-channel-meta" class="text-xs text-slate-400 flex items-center gap-x-2"></div>
+                    </div>
+                </div>
+                
+                <div class="flex items-center gap-x-2">
+                    <button onclick="toggleFavoriteFromPlayer()" id="player-fav-btn"
+                            class="px-3 py-1.5 text-sm flex items-center gap-x-2 rounded-2xl bg-slate-800 hover:bg-slate-700 border border-slate-600">
+                        <i class="fa-solid fa-heart"></i> 
+                        <span class="hidden sm:inline" id="player-fav-text">Favorit</span>
+                    </button>
+                    
+                    <button onclick="copyStreamURL()" 
+                            class="px-4 py-1.5 text-sm flex items-center gap-x-2 rounded-2xl bg-slate-800 hover:bg-slate-700 border border-slate-600">
+                        <i class="fa-solid fa-copy"></i> 
+                        <span class="hidden sm:inline">Salin URL</span>
+                    </button>
+                    
+                    <button onclick="openInVLC()" 
+                            class="px-4 py-1.5 text-sm flex items-center gap-x-2 rounded-2xl bg-amber-900/70 hover:bg-amber-800/70 border border-amber-700 text-amber-300">
+                        <i class="fa-solid fa-external-link-alt"></i> 
+                        <span class="hidden sm:inline">Buka di VLC</span>
+                    </button>
+                    
+                    <button onclick="closePlayer()" 
+                            class="w-9 h-9 flex items-center justify-center text-xl hover:bg-slate-800 rounded-2xl transition-colors">
+                        &times;
+                    </button>
+                </div>
+            </div>
+
+            <!-- Video Area -->
+            <div class="p-5 bg-black">
+                <div class="relative stream-player">
+                    <video id="video-player" class="w-full rounded-2xl shadow-inner" controls playsinline></video>
+                    
+                    <!-- Overlay info -->
+                    <div id="player-status-overlay" class="hidden absolute top-4 right-4 bg-black/70 text-white text-xs px-3 py-1 rounded-full flex items-center gap-x-1.5">
+                        <i class="fa-solid fa-circle text-emerald-400"></i>
+                        <span>LIVE</span>
+                    </div>
+                </div>
+                
+                <!-- HLS Quality Controls -->
+                <div id="quality-controls" class="hidden mt-3 flex items-center gap-x-3 text-xs">
+                    <div class="text-slate-400">Kualitas:</div>
+                    <div id="quality-buttons" class="flex gap-1.5 flex-wrap"></div>
+                </div>
+            </div>
+
+            <!-- Player Footer -->
+            <div class="px-6 py-4 bg-slate-900 border-t border-slate-700 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm">
+                <div class="flex items-center gap-x-2 text-slate-400">
+                    <i class="fa-solid fa-info-circle"></i>
+                    <span id="player-stream-url" class="font-mono text-xs bg-slate-950 px-2 py-px rounded break-all max-w-[280px] truncate"></span>
+                </div>
+                
+                <div class="flex-1"></div>
+                
+                <button onclick="togglePiP()" class="px-3 py-1 text-xs flex items-center gap-x-1.5 hover:text-blue-400 transition-colors">
+                    <i class="fa-solid fa-compress-arrows-alt"></i>
+                    <span>Picture-in-Picture</span>
+                </button>
+                
+                <button onclick="refreshCurrentChannelStatus()" class="px-3 py-1 text-xs flex items-center gap-x-1.5 hover:text-blue-400 transition-colors">
+                    <i class="fa-solid fa-sync"></i>
+                    <span>Periksa Ulang</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add / Edit Channel Modal -->
+    <div id="add-modal" onclick="if (event.target.id === 'add-modal') closeAddModal()" class="hidden fixed inset-0 bg-black/70 z-[110] flex items-center justify-center p-4">
+        <div onclick="event.stopImmediatePropagation()" class="w-full max-w-md bg-slate-900 border border-slate-700 rounded-3xl p-6">
+            <div class="flex justify-between items-center mb-5">
+                <h2 id="add-modal-title" class="text-xl font-semibold">Tambah Channel Baru</h2>
+                <button onclick="closeAddModal()" class="text-2xl leading-none text-slate-400 hover:text-white">&times;</button>
+            </div>
+            
+            <div class="space-y-4">
+                <div>
+                    <label class="text-xs text-slate-400 block mb-1.5">Nama Channel</label>
+                    <input id="channel-name" type="text" class="w-full bg-slate-950 border border-slate-700 px-4 py-2.5 rounded-2xl text-sm" placeholder="Contoh: CNN International">
+                </div>
+                <div>
+                    <label class="text-xs text-slate-400 block mb-1.5">URL Stream (HLS .m3u8 atau direct)</label>
+                    <input id="channel-url" type="text" class="w-full bg-slate-950 border border-slate-700 px-4 py-2.5 rounded-2xl font-mono text-xs" placeholder="https://.../master.m3u8">
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="text-xs text-slate-400 block mb-1.5">Kategori / Group</label>
+                        <input id="channel-category" type="text" class="w-full bg-slate-950 border border-slate-700 px-4 py-2.5 rounded-2xl text-sm" placeholder="News" value="Umum">
+                    </div>
+                    <div>
+                        <label class="text-xs text-slate-400 block mb-1.5">Negara</label>
+                        <input id="channel-country" type="text" class="w-full bg-slate-950 border border-slate-700 px-4 py-2.5 rounded-2xl text-sm" placeholder="US / ID / Global" value="Global">
+                    </div>
+                </div>
+                <div>
+                    <label class="text-xs text-slate-400 block mb-1.5">URL Logo (opsional)</label>
+                    <input id="channel-logo" type="text" class="w-full bg-slate-950 border border-slate-700 px-4 py-2.5 rounded-2xl text-sm" placeholder="https://...logo.png">
+                </div>
+            </div>
+
+            <div class="flex gap-3 mt-6">
+                <button onclick="closeAddModal()" class="flex-1 py-3 rounded-2xl bg-slate-800 hover:bg-slate-700 text-sm font-medium">Batal</button>
+                <button onclick="saveChannelFromModal()" id="save-channel-btn"
+                        class="flex-1 py-3 rounded-2xl bg-blue-600 hover:bg-blue-500 text-sm font-semibold">Simpan Channel</button>
+            </div>
+            <p class="text-center text-[10px] mt-4 text-slate-500">Stream harus dapat diakses secara publik (HLS direkomendasikan).</p>
+        </div>
+    </div>
+
+    <!-- Import Modal -->
+    <div id="import-modal" onclick="if (event.target.id === 'import-modal') closeImportModal()" class="hidden fixed inset-0 bg-black/70 z-[110] flex items-center justify-center p-4">
+        <div onclick="event.stopImmediatePropagation()" class="w-full max-w-lg bg-slate-900 border border-slate-700 rounded-3xl p-6">
+            <h2 class="text-xl font-semibold mb-1">Impor Playlist M3U / M3U8</h2>
+            <p class="text-slate-400 text-sm mb-4">Paste URL playlist publik. Aplikasi akan mem-parse dan menambahkan channel baru.</p>
+            
+            <div class="mb-4">
+                <label class="text-xs text-slate-400 block mb-1.5">URL Playlist</label>
+                <input id="import-url" type="text" value="https://iptv-org.github.io/iptv/categories/news.m3u" 
+                       class="w-full bg-slate-950 border border-slate-700 px-4 py-2.5 text-sm rounded-2xl font-mono">
+            </div>
+
+            <div class="flex items-center gap-2 mb-5 text-xs">
+                <div class="px-3 py-1 bg-slate-800 rounded-full">Mendukung tvg-logo, group-title, tvg-country</div>
+            </div>
+
+            <div class="flex gap-3">
+                <button onclick="closeImportModal()" class="flex-1 py-3 rounded-2xl bg-slate-800 hover:bg-slate-700 text-sm font-medium">Batal</button>
+                <button onclick="importFromURL()" class="flex-1 py-3 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-sm font-semibold">Import &amp; Tambahkan</button>
+            </div>
+            
+            <div class="text-[10px] text-center text-slate-500 mt-4">
+                Contoh bagus: iptv-org categories atau Free-TV playlist. Import besar mungkin butuh waktu.
+            </div>
+        </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div id="settings-modal" onclick="if (event.target.id === 'settings-modal') closeSettingsModal()" class="hidden fixed inset-0 bg-black/70 z-[110] flex items-center justify-center p-4">
+        <div onclick="event.stopImmediatePropagation()" class="w-full max-w-sm bg-slate-900 border border-slate-700 rounded-3xl p-6">
+            <h2 class="text-xl font-semibold mb-5">Pengaturan</h2>
+            
+            <div class="space-y-5 text-sm">
+                <div>
+                    <label class="block text-xs text-slate-400 mb-1.5">Interval Auto Periksa Status</label>
+                    <select id="settings-auto-refresh" class="w-full bg-slate-950 border border-slate-700 rounded-2xl px-4 py-2.5 text-sm">
+                        <option value="0">Nonaktif</option>
+                        <option value="300000">Setiap 5 menit</option>
+                        <option value="900000">Setiap 15 menit</option>
+                    </select>
+                </div>
+                
+                <div class="flex items-center justify-between">
+                    <div>
+                        <div class="font-medium">Auto periksa saat buka aplikasi</div>
+                        <div class="text-xs text-slate-400">Memeriksa status 20 channel pertama</div>
+                    </div>
+                    <input type="checkbox" id="settings-auto-check-onload" class="w-4 h-4 accent-blue-500">
+                </div>
+
+                <div class="pt-2 border-t border-slate-800 text-xs text-slate-400">
+                    Semua data (channel, favorit, pengaturan) disimpan secara lokal di browser ini.
+                </div>
+            </div>
+
+            <div class="mt-6 flex gap-3">
+                <button onclick="closeSettingsModal()" class="flex-1 py-3 bg-slate-800 hover:bg-slate-700 rounded-2xl text-sm font-medium">Tutup</button>
+                <button onclick="saveSettings()" class="flex-1 py-3 bg-blue-600 hover:bg-blue-500 rounded-2xl text-sm font-semibold">Simpan Pengaturan</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div id="toast-container" class="fixed bottom-4 right-4 z-[200] space-y-2"></div>
+
+    <script>
+        // ==================== STATE ====================
+        let channels = [];
+        let currentFilter = 'all';
+        let currentCategory = null;
+        let currentPlayerChannel = null;
+        let currentHls = null;
+        let videoPlayer = null;
+        let autoRefreshTimer = null;
+        let filterDebounce = null;
+
+        const STORAGE_KEY = 'asindu_liveworld_channels_v1';
+        const SETTINGS_KEY = 'asindu_liveworld_settings_v1';
+        const FAVORITES_KEY = 'asindu_liveworld_favorites_v1';
+
+        let favorites = new Set();
+        let settings = {
+            autoRefreshInterval: 0,
+            autoCheckOnLoad: true
+        };
+
+        // ==================== TAILWIND + INIT ====================
+        function initTailwind() {
+            document.documentElement.style.setProperty('--accent', '#3b82f6');
+        }
+
+        // ==================== UTILS ====================
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `toast flex items-center gap-x-3 px-5 py-3.5 rounded-2xl shadow-2xl border text-sm max-w-xs ${
+                type === 'success' ? 'bg-emerald-900/80 border-emerald-700 text-emerald-100' : 
+                type === 'error' ? 'bg-red-900/80 border-red-700 text-red-100' : 
+                'bg-slate-800 border-slate-600 text-slate-200'
+            }`;
+            
+            const icon = type === 'success' ? 'fa-check-circle' : type === 'error' ? 'fa-exclamation-circle' : 'fa-info-circle';
+            toast.innerHTML = `
+                <i class="fa-solid ${icon}"></i>
+                <span>${message}</span>
+            `;
+            container.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.style.transition = 'all 0.2s';
+                toast.style.opacity = '0';
+                setTimeout(() => toast.remove(), 200);
+            }, 3200);
+        }
+
+        function saveToStorage() {
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(channels));
+                localStorage.setItem(FAVORITES_KEY, JSON.stringify([...favorites]));
+            } catch (e) {}
+        }
+
+        function loadFromStorage() {
+            try {
+                const savedChannels = localStorage.getItem(STORAGE_KEY);
+                if (savedChannels) {
+                    channels = JSON.parse(savedChannels);
+                }
+                
+                const savedFavs = localStorage.getItem(FAVORITES_KEY);
+                if (savedFavs) {
+                    favorites = new Set(JSON.parse(savedFavs));
+                }
+                
+                const savedSettings = localStorage.getItem(SETTINGS_KEY);
+                if (savedSettings) {
+                    settings = { ...settings, ...JSON.parse(savedSettings) };
+                }
+            } catch (e) {
+                console.warn('Storage load failed', e);
+            }
+        }
+
+        function updateStats() {
+            const total = channels.length;
+            const live = channels.filter(c => c.status === 'live').length;
+            const offline = channels.filter(c => c.status === 'offline').length;
+            
+            document.getElementById('stat-total').textContent = total;
+            document.getElementById('stat-live').textContent = live;
+            document.getElementById('stat-offline').textContent = offline;
+        }
+
+        function debounceFilter() {
+            clearTimeout(filterDebounce);
+            filterDebounce = setTimeout(filterChannels, 180);
+        }
+
+        // ==================== M3U PARSER ====================
+        function parseM3U(content) {
+            const lines = content.split(/\r?\n/);
+            const parsed = [];
+            let current = null;
+
+            for (let i = 0; i < lines.length; i++) {
+                const line = lines[i].trim();
+                if (!line) continue;
+
+                if (line.startsWith('#EXTINF')) {
+                    current = { name: '', url: '', logo: '', group: 'Umum', country: 'Global' };
+                    
+                    // Extract attributes
+                    const nameMatch = line.match(/,(.+)$/);
+                    if (nameMatch) current.name = nameMatch[1].trim();
+
+                    const logoMatch = line.match(/tvg-logo="([^"]*)"/i);
+                    if (logoMatch) current.logo = logoMatch[1];
+
+                    const groupMatch = line.match(/group-title="([^"]*)"/i);
+                    if (groupMatch) current.group = groupMatch[1] || 'Umum';
+
+                    const countryMatch = line.match(/tvg-country="([^"]*)"/i);
+                    if (countryMatch) current.country = countryMatch[1] || 'Global';
+                    
+                    // Fallback name extraction if not captured
+                    if (!current.name) {
+                        const simple = line.split(',').pop();
+                        if (simple) current.name = simple.trim();
+                    }
+                } 
+                else if (line.startsWith('#EXTM3U') || line.startsWith('#')) {
+                    continue;
+                } 
+                else if (current && (line.startsWith('http') || line.startsWith('rtmp') || line.includes('.m3u8'))) {
+                    current.url = line;
+                    if (current.name && current.url) {
+                        parsed.push({ ...current });
+                    }
+                    current = null;
+                }
+            }
+            return parsed;
+        }
+
+        // ==================== RENDER CHANNELS ====================
+        function renderChannels(filteredChannels) {
+            const container = document.getElementById('channels-container');
+            const empty = document.getElementById('empty-state');
+            container.innerHTML = '';
+            
+            if (!filteredChannels || filteredChannels.length === 0) {
+                empty.classList.remove('hidden');
+                container.classList.add('hidden');
+                return;
+            }
+            
+            empty.classList.add('hidden');
+            container.classList.remove('hidden');
+
+            filteredChannels.forEach(channel => {
+                const isFav = favorites.has(channel.id);
+                const status = channel.status || 'unknown';
+                
+                let statusHTML = '';
+                if (status === 'live') {
+                    statusHTML = `<div class="inline-flex items-center gap-x-1 px-2.5 py-px rounded-full bg-emerald-500/10 text-emerald-400 text-[10px] font-semibold"><i class="fa-solid fa-circle text-[8px] mr-1 status-dot"></i> LIVE</div>`;
+                } else if (status === 'offline') {
+                    statusHTML = `<div class="inline-flex items-center gap-x-1 px-2.5 py-px rounded-full bg-red-500/10 text-red-400 text-[10px] font-semibold"><i class="fa-solid fa-circle text-[8px] mr-1"></i> OFFLINE</div>`;
+                } else {
+                    statusHTML = `<div class="inline-flex items-center gap-x-1 px-2.5 py-px rounded-full bg-slate-600/30 text-slate-400 text-[10px] font-semibold">UNKNOWN</div>`;
+                }
+
+                const logoHTML = channel.logo 
+                    ? `<img src="${channel.logo}" class="w-full h-full object-cover" onerror="this.style.display='none'; this.parentElement.innerHTML='<div class=\\'channel-logo w-full h-full text-base\\'>${getInitials(channel.name)}</div>'">`
+                    : `<div class="channel-logo w-full h-full text-base">${getInitials(channel.name)}</div>`;
+
+                const card = document.createElement('div');
+                card.className = `channel-card bg-slate-900 border border-slate-700 hover:border-slate-600 rounded-3xl overflow-hidden group cursor-pointer flex flex-col`;
+                
+                card.innerHTML = `
+                    <div class="relative">
+                        <div class="aspect-video w-full overflow-hidden bg-slate-950 relative">
+                            ${logoHTML}
+                            
+                            <div class="absolute top-3 right-3 flex items-center gap-x-1.5">
+                                ${statusHTML}
+                                <div class="relative" onclick="event.stopImmediatePropagation(); showChannelMenu(this, '${channel.id}');">
+                                    <button class="w-6 h-6 flex items-center justify-center bg-black/60 hover:bg-black/80 rounded-full text-xs">
+                                        <i class="fa-solid fa-ellipsis-v"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <div class="absolute top-3 left-3 flex gap-1.5">
+                                ${channel.country ? `<div class="px-1.5 py-px text-[9px] bg-black/60 rounded font-mono tracking-wider">${channel.country}</div>` : ''}
+                            </div>
+                            
+                            <div class="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-black/70 to-transparent"></div>
+                            
+                            <div class="absolute bottom-3 left-3 right-3 flex items-center justify-between">
+                                <div class="text-xs font-medium truncate pr-3">${channel.group || 'Umum'}</div>
+                                
+                                <div onclick="event.stopImmediatePropagation(); toggleFavorite('${channel.id}');" 
+                                     class="text-lg transition-all ${isFav ? 'text-pink-500' : 'text-slate-400 hover:text-pink-400'}">
+                                    <i class="fa-${isFav ? 'solid' : 'regular'} fa-heart"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="p-4 flex-1 flex flex-col">
+                        <div class="font-semibold leading-tight mb-1.5 line-clamp-2 group-hover:text-blue-400 transition-colors">${channel.name}</div>
+                        
+                        <div class="mt-auto flex items-center justify-between pt-2">
+                            <div class="text-[11px] text-slate-400 truncate pr-2">${channel.url.length > 42 ? '...' + channel.url.slice(-38) : channel.url}</div>
+                            
+                            <div class="flex gap-x-1 flex-shrink-0">
+                                <button onclick="event.stopImmediatePropagation(); checkSingleStatus('${channel.id}');" 
+                                        class="text-xs px-2 py-1 bg-slate-800 hover:bg-slate-700 rounded-xl text-slate-300 transition-colors">
+                                    <i class="fa-solid fa-sync text-[10px]"></i>
+                                </button>
+                                <button onclick="event.stopImmediatePropagation(); watchChannel('${channel.id}');" 
+                                        class="text-xs px-3 py-1 bg-blue-600 hover:bg-blue-500 rounded-xl flex items-center gap-x-1 font-medium text-white transition-colors">
+                                    <i class="fa-solid fa-play text-xs"></i>
+                                    <span class="font-semibold">Tonton</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                // Click whole card to watch
+                card.onclick = () => watchChannel(channel.id);
+                
+                container.appendChild(card);
+            });
+        }
+
+        function getInitials(name) {
+            if (!name) return 'TV';
+            const words = name.trim().split(/\s+/);
+            if (words.length >= 2) return (words[0][0] + words[1][0]).toUpperCase();
+            return name.substring(0, 2).toUpperCase();
+        }
+
+        // Simple channel context menu (edit / delete / mark live)
+        let activeMenu = null;
+        function showChannelMenu(el, channelId) {
+            if (activeMenu) activeMenu.remove();
+            
+            const channel = channels.find(c => c.id === channelId);
+            if (!channel) return;
+            
+            const rect = el.getBoundingClientRect();
+            const menu = document.createElement('div');
+            menu.className = 'fixed z-[150] bg-slate-900 border border-slate-600 rounded-2xl shadow-2xl py-1 text-sm min-w-[148px]';
+            menu.style.top = (rect.bottom + 6) + 'px';
+            menu.style.left = (rect.left - 80) + 'px';
+            
+            menu.innerHTML = `
+                <div onclick="editChannel('${channelId}'); closeActiveMenu();" class="px-4 py-2 hover:bg-slate-800 cursor-pointer flex items-center gap-x-2">
+                    <i class="fa-solid fa-edit w-4 text-slate-400"></i> <span>Edit Channel</span>
+                </div>
+                <div onclick="deleteChannel('${channelId}'); closeActiveMenu();" class="px-4 py-2 hover:bg-slate-800 cursor-pointer flex items-center gap-x-2 text-red-400">
+                    <i class="fa-solid fa-trash w-4"></i> <span>Hapus</span>
+                </div>
+                <div class="h-px bg-slate-700 my-1 mx-2"></div>
+                <div onclick="markChannelStatus('${channelId}', 'live'); closeActiveMenu();" class="px-4 py-2 hover:bg-slate-800 cursor-pointer flex items-center gap-x-2">
+                    <i class="fa-solid fa-play text-emerald-400 w-4"></i> <span>Tandai LIVE</span>
+                </div>
+                <div onclick="markChannelStatus('${channelId}', 'offline'); closeActiveMenu();" class="px-4 py-2 hover:bg-slate-800 cursor-pointer flex items-center gap-x-2">
+                    <i class="fa-solid fa-ban text-red-400 w-4"></i> <span>Tandai OFFLINE</span>
+                </div>
+            `;
+            
+            document.body.appendChild(menu);
+            activeMenu = menu;
+            
+            // Close on outside click
+            setTimeout(() => {
+                document.addEventListener('click', function handler(ev) {
+                    if (!menu.contains(ev.target)) {
+                        menu.remove();
+                        document.removeEventListener('click', handler);
+                        activeMenu = null;
+                    }
+                }, { once: true });
+            }, 10);
+        }
+        
+        function closeActiveMenu() {
+            if (activeMenu) {
+                activeMenu.remove();
+                activeMenu = null;
+            }
+        }
+        
+        function markChannelStatus(channelId, status) {
+            const idx = channels.findIndex(c => c.id === channelId);
+            if (idx === -1) return;
+            channels[idx].status = status;
+            channels[idx].lastChecked = Date.now();
+            saveToStorage();
+            filterChannels();
+            updateStats();
+            showToast('Status channel diperbarui secara manual');
+        }
+
+        function filterChannels() {
+            const searchTerm = (document.getElementById('search-input').value || '').toLowerCase().trim();
+            const sortMode = document.getElementById('sort-select').value;
+            
+            let filtered = [...channels];
+
+            // Apply main filter
+            if (currentFilter === 'live') {
+                filtered = filtered.filter(c => c.status === 'live');
+            } else if (currentFilter === 'offline') {
+                filtered = filtered.filter(c => c.status === 'offline');
+            } else if (currentFilter === 'favorites') {
+                filtered = filtered.filter(c => favorites.has(c.id));
+            }
+
+            // Category filter
+            if (currentCategory) {
+                filtered = filtered.filter(c => (c.group || 'Umum').toLowerCase() === currentCategory.toLowerCase());
+            }
+
+            // Search
+            if (searchTerm) {
+                filtered = filtered.filter(c => 
+                    (c.name || '').toLowerCase().includes(searchTerm) ||
+                    (c.group || '').toLowerCase().includes(searchTerm) ||
+                    (c.country || '').toLowerCase().includes(searchTerm) ||
+                    (c.url || '').toLowerCase().includes(searchTerm)
+                );
+            }
+
+            // Sort
+            if (sortMode === 'name') {
+                filtered.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+            } else if (sortMode === 'status') {
+                const order = { 'live': 0, 'unknown': 1, 'offline': 2 };
+                filtered.sort((a, b) => (order[a.status] || 1) - (order[b.status] || 1) || (a.name || '').localeCompare(b.name || ''));
+            } else if (sortMode === 'category') {
+                filtered.sort((a, b) => (a.group || '').localeCompare(b.group || '') || (a.name || '').localeCompare(b.name || ''));
+            }
+
+            renderChannels(filtered);
+        }
+
+        function setActiveFilter(filter) {
+            currentFilter = filter;
+            currentCategory = null;
+            
+            // Update nav styles
+            document.querySelectorAll('[id^="filter-"]').forEach(el => el.classList.remove('nav-active'));
+            const activeEl = document.getElementById(`filter-${filter}`);
+            if (activeEl) activeEl.classList.add('nav-active');
+            
+            // Clear category active state
+            document.querySelectorAll('#category-list .cat-item').forEach(el => el.classList.remove('!bg-blue-600', '!text-white'));
+            
+            filterChannels();
+        }
+
+        function setCategoryFilter(cat) {
+            currentCategory = cat;
+            currentFilter = 'all';
+            
+            // Reset main filters visual
+            document.querySelectorAll('[id^="filter-"]').forEach(el => el.classList.remove('nav-active'));
+            document.getElementById('filter-all').classList.add('nav-active');
+            
+            // Highlight active cat
+            document.querySelectorAll('#category-list .cat-item').forEach(el => {
+                el.classList.remove('!bg-blue-600', '!text-white');
+                if (el.dataset.cat === cat) el.classList.add('!bg-blue-600', '!text-white');
+            });
+            
+            filterChannels();
+        }
+
+        function renderCategories(searchTerm = '') {
+            const container = document.getElementById('category-list');
+            container.innerHTML = '';
+            
+            const cats = {};
+            channels.forEach(ch => {
+                const g = ch.group || 'Umum';
+                cats[g] = (cats[g] || 0) + 1;
+            });
+            
+            let sortedCats = Object.keys(cats).sort((a, b) => cats[b] - cats[a]); // sort by count desc
+            
+            const term = (searchTerm || document.getElementById('cat-search')?.value || '').toLowerCase().trim();
+            if (term) {
+                sortedCats = sortedCats.filter(cat => cat.toLowerCase().includes(term));
+            }
+            
+            document.getElementById('cat-count').textContent = sortedCats.length;
+            
+            if (sortedCats.length === 0) {
+                container.innerHTML = `<div class="px-3 py-2 text-xs text-slate-500">Tidak ada kategori cocok</div>`;
+                return;
+            }
+            
+            // Limit initial display to avoid very long lists
+            const maxInitial = 25;
+            const displayCats = sortedCats.slice(0, maxInitial);
+            
+            displayCats.forEach(cat => {
+                const count = cats[cat];
+                const div = document.createElement('div');
+                div.className = `cat-item flex justify-between items-center px-3 py-[7px] rounded-2xl text-sm hover:bg-slate-800 cursor-pointer transition-colors`;
+                div.dataset.cat = cat;
+                div.innerHTML = `
+                    <span class="truncate">${cat}</span>
+                    <span class="text-xs px-1.5 py-px rounded bg-slate-800 text-slate-400">${count}</span>
+                `;
+                div.onclick = () => setCategoryFilter(cat);
+                container.appendChild(div);
+            });
+            
+            if (sortedCats.length > maxInitial) {
+                const more = document.createElement('div');
+                more.className = `px-3 py-1 text-xs text-center text-blue-400 cursor-pointer hover:text-blue-300`;
+                more.textContent = `+ ${sortedCats.length - maxInitial} kategori lagi (cari untuk filter)`;
+                more.onclick = () => {
+                    // re-render without limit when clicked (or user can use search)
+                    container.innerHTML = '';
+                    sortedCats.forEach(cat => {
+                        const count = cats[cat];
+                        const div = document.createElement('div');
+                        div.className = `cat-item flex justify-between items-center px-3 py-[7px] rounded-2xl text-sm hover:bg-slate-800 cursor-pointer transition-colors`;
+                        div.dataset.cat = cat;
+                        div.innerHTML = `
+                            <span class="truncate">${cat}</span>
+                            <span class="text-xs px-1.5 py-px rounded bg-slate-800 text-slate-400">${count}</span>
+                        `;
+                        div.onclick = () => setCategoryFilter(cat);
+                        container.appendChild(div);
+                    });
+                };
+                container.appendChild(more);
+            }
+        }
+
+        // ==================== STATUS CHECKING ====================
+        async function checkStreamStatus(channel) {
+            return new Promise((resolve) => {
+                const video = document.createElement('video');
+                video.muted = true;
+                video.playsInline = true;
+                video.style.display = 'none';
+                document.body.appendChild(video);
+                
+                let hlsInstance = null;
+                let resolved = false;
+                const TIMEOUT = 8500;
+
+                const finish = (status) => {
+                    if (resolved) return;
+                    resolved = true;
+                    clearTimeout(timeoutId);
+                    
+                    if (hlsInstance) {
+                        try { hlsInstance.destroy(); } catch(e) {}
+                    }
+                    try { video.pause(); } catch(e) {}
+                    video.remove();
+                    resolve(status);
+                };
+
+                const timeoutId = setTimeout(() => finish('offline'), TIMEOUT);
+
+                const onSuccess = () => finish('live');
+                const onFail = () => finish('offline');
+
+                video.addEventListener('loadedmetadata', onSuccess, { once: true });
+                video.addEventListener('canplay', onSuccess, { once: true });
+                video.addEventListener('error', onFail, { once: true });
+
+                const isHLS = channel.url.toLowerCase().includes('.m3u8') || 
+                              channel.url.includes('m3u8') || 
+                              channel.url.includes('hls');
+
+                if (isHLS && typeof Hls !== 'undefined' && Hls.isSupported()) {
+                    try {
+                        hlsInstance = new Hls({
+                            enableWorker: true,
+                            lowLatencyMode: false,
+                            backBufferLength: 30
+                        });
+                        
+                        hlsInstance.loadSource(channel.url);
+                        hlsInstance.attachMedia(video);
+                        
+                        hlsInstance.on(Hls.Events.MANIFEST_PARSED, () => {
+                            // Good sign it's live / playable
+                            setTimeout(onSuccess, 180);
+                        });
+                        
+                        hlsInstance.on(Hls.Events.ERROR, (event, data) => {
+                            if (data.fatal) {
+                                onFail();
+                            }
+                        });
+                    } catch (e) {
+                        onFail();
+                    }
+                } else {
+                    // Native HLS or direct video
+                    video.src = channel.url;
+                    video.load();
+                    
+                    // For native, give it a small push
+                    setTimeout(() => {
+                        video.play().catch(() => {});
+                    }, 300);
+                }
+            });
+        }
+
+        async function checkSingleStatus(channelId) {
+            const idx = channels.findIndex(c => c.id === channelId);
+            if (idx === -1) return;
+            
+            const channel = channels[idx];
+            showToast('Memeriksa status...', 'info');
+            
+            const newStatus = await checkStreamStatus(channel);
+            channels[idx].status = newStatus;
+            channels[idx].lastChecked = Date.now();
+            
+            saveToStorage();
+            filterChannels();
+            updateStats();
+            
+            const msg = newStatus === 'live' ? 'Channel aktif (LIVE)' : 'Channel offline / tidak bisa diputar';
+            showToast(msg, newStatus === 'live' ? 'success' : 'error');
+        }
+
+        async function refreshAllStatuses(limit = 50) {
+            const toCheck = channels.slice(0, limit);
+            if (toCheck.length === 0) {
+                showToast('Tidak ada channel untuk diperiksa', 'info');
+                return;
+            }
+            
+            showToast(`Memeriksa ${toCheck.length} channel... (bisa butuh waktu)`, 'info');
+            
+            let liveCount = 0;
+            
+            // Concurrency limit 4
+            const concurrency = 4;
+            let index = 0;
+            
+            const workers = Array(concurrency).fill(0).map(async () => {
+                while (index < toCheck.length) {
+                    const currentIndex = index++;
+                    const ch = toCheck[currentIndex];
+                    const realIdx = channels.findIndex(c => c.id === ch.id);
+                    if (realIdx === -1) continue;
+                    
+                    const status = await checkStreamStatus(ch);
+                    channels[realIdx].status = status;
+                    channels[realIdx].lastChecked = Date.now();
+                    
+                    if (status === 'live') liveCount++;
+                    
+                    // Live update every 4
+                    if (currentIndex % 4 === 0) {
+                        filterChannels();
+                        updateStats();
+                    }
+                }
+            });
+            
+            await Promise.all(workers);
+            
+            saveToStorage();
+            filterChannels();
+            updateStats();
+            
+            showToast(`Selesai. ${liveCount} channel aktif dari ${toCheck.length} yang dicek.`, 'success');
+        }
+
+        async function refreshCurrentChannelStatus() {
+            if (!currentPlayerChannel) return;
+            const idx = channels.findIndex(c => c.id === currentPlayerChannel.id);
+            if (idx < 0) return;
+            
+            const status = await checkStreamStatus(channels[idx]);
+            channels[idx].status = status;
+            saveToStorage();
+            
+            // Update player UI
+            const meta = document.getElementById('player-channel-meta');
+            if (meta) {
+                meta.innerHTML = `${channels[idx].group || 'Umum'} • ${channels[idx].country || 'Global'} • <span class="${status === 'live' ? 'text-emerald-400' : 'text-red-400'}">${status.toUpperCase()}</span>`;
+            }
+            
+            filterChannels();
+            updateStats();
+            showToast(status === 'live' ? 'Masih LIVE' : 'Sekarang OFFLINE', status === 'live' ? 'success' : 'error');
+        }
+
+        // ==================== CHANNEL ACTIONS ====================
+        function watchChannel(channelId) {
+            const channel = channels.find(c => c.id === channelId);
+            if (!channel) return;
+            
+            currentPlayerChannel = channel;
+            
+            // Open modal
+            const modal = document.getElementById('player-modal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            
+            // Set header info
+            document.getElementById('player-channel-name').textContent = channel.name;
+            const metaEl = document.getElementById('player-channel-meta');
+            metaEl.innerHTML = `${channel.group || 'Umum'} • ${channel.country || 'Global'} • <span class="${channel.status === 'live' ? 'text-emerald-400' : channel.status === 'offline' ? 'text-red-400' : ''}">${(channel.status || 'unknown').toUpperCase()}</span>`;
+            
+            const logoContainer = document.getElementById('player-logo');
+            logoContainer.innerHTML = channel.logo 
+                ? `<img src="${channel.logo}" class="w-full h-full object-cover" onerror="this.outerHTML='<div class=\\'channel-logo w-full h-full text-sm\\'>${getInitials(channel.name)}</div>'">` 
+                : `<div class="channel-logo w-full h-full text-sm">${getInitials(channel.name)}</div>`;
+            
+            document.getElementById('player-stream-url').textContent = channel.url;
+            
+            // Fav button state
+            updatePlayerFavButton();
+            
+            // Setup video
+            setupVideoPlayer(channel);
+        }
+
+        function setupVideoPlayer(channel) {
+            const video = document.getElementById('video-player');
+            videoPlayer = video;
+            
+            // Cleanup previous
+            if (currentHls) {
+                try { currentHls.destroy(); } catch(e) {}
+                currentHls = null;
+            }
+            video.src = '';
+            video.load();
+            
+            const isHLS = channel.url.toLowerCase().includes('.m3u8');
+            const qualityControls = document.getElementById('quality-controls');
+            qualityControls.classList.add('hidden');
+            
+            if (isHLS && typeof Hls !== 'undefined' && Hls.isSupported()) {
+                currentHls = new Hls({
+                    enableWorker: true,
+                    maxBufferLength: 30,
+                    backBufferLength: 15
+                });
+                
+                currentHls.loadSource(channel.url);
+                currentHls.attachMedia(video);
+                
+                currentHls.on(Hls.Events.MANIFEST_PARSED, () => {
+                    video.play().catch(() => {});
+                    
+                    // Quality levels
+                    const levels = currentHls.levels;
+                    if (levels && levels.length > 1) {
+                        qualityControls.classList.remove('hidden');
+                        renderQualityButtons(levels);
+                    }
+                });
+                
+                currentHls.on(Hls.Events.ERROR, (event, data) => {
+                    if (data.fatal) {
+                        showToast('Gagal memutar stream. Coba VLC atau periksa status.', 'error');
+                        console.error('HLS fatal error', data);
+                    }
+                });
+            } else {
+                // Native playback
+                video.src = channel.url;
+                video.play().catch(err => {
+                    console.warn('Native play failed', err);
+                    showToast('Browser tidak bisa autoplay. Klik tombol play di video.', 'info');
+                });
+            }
+            
+            // Keyboard controls inside player
+            video.onkeydown = handleVideoKeydown;
+        }
+
+        function renderQualityButtons(levels) {
+            const container = document.getElementById('quality-buttons');
+            container.innerHTML = '';
+            
+            // Auto
+            const autoBtn = createQualityBtn('Otomatis', -1, true);
+            container.appendChild(autoBtn);
+            
+            levels.forEach((level, idx) => {
+                const label = level.height ? `${level.height}p` : (level.bitrate ? Math.round(level.bitrate / 1000) + 'k' : 'Level ' + idx);
+                const btn = createQualityBtn(label, idx);
+                container.appendChild(btn);
+            });
+        }
+
+        function createQualityBtn(label, levelIdx, isAuto = false) {
+            const btn = document.createElement('button');
+            btn.className = `px-3 py-1 rounded-xl text-xs border transition-colors ${isAuto ? 'bg-blue-600 border-blue-500' : 'bg-slate-800 border-slate-700 hover:bg-slate-700'}`;
+            btn.textContent = label;
+            
+            btn.onclick = () => {
+                if (!currentHls) return;
+                
+                // Deselect all
+                document.querySelectorAll('#quality-buttons button').forEach(b => b.classList.remove('bg-blue-600', 'border-blue-500'));
+                btn.classList.add('bg-blue-600', 'border-blue-500');
+                
+                if (levelIdx === -1) {
+                    currentHls.currentLevel = -1; // auto
+                } else {
+                    currentHls.currentLevel = levelIdx;
+                }
+            };
+            return btn;
+        }
+
+        function handleVideoKeydown(e) {
+            if (!videoPlayer) return;
+            if (e.key === ' ' || e.key === 'k') {
+                e.preventDefault();
+                if (videoPlayer.paused) videoPlayer.play(); else videoPlayer.pause();
+            }
+            if (e.key.toLowerCase() === 'f') {
+                e.preventDefault();
+                if (videoPlayer.requestFullscreen) videoPlayer.requestFullscreen();
+                else if (videoPlayer.webkitRequestFullscreen) videoPlayer.webkitRequestFullscreen();
+            }
+        }
+
+        function closePlayer() {
+            const modal = document.getElementById('player-modal');
+            modal.classList.remove('flex');
+            modal.classList.add('hidden');
+            
+            const video = document.getElementById('video-player');
+            if (video) {
+                video.pause();
+                video.src = '';
+            }
+            
+            if (currentHls) {
+                try { currentHls.destroy(); } catch(e) {}
+                currentHls = null;
+            }
+            
+            currentPlayerChannel = null;
+        }
+
+        function updatePlayerFavButton() {
+            if (!currentPlayerChannel) return;
+            const isFav = favorites.has(currentPlayerChannel.id);
+            const btn = document.getElementById('player-fav-btn');
+            const txt = document.getElementById('player-fav-text');
+            
+            if (isFav) {
+                btn.classList.add('!bg-pink-900/70', '!border-pink-700', 'text-pink-400');
+                btn.classList.remove('bg-slate-800', 'border-slate-600');
+                txt.textContent = 'Favorit ✓';
+            } else {
+                btn.classList.remove('!bg-pink-900/70', '!border-pink-700', 'text-pink-400');
+                btn.classList.add('bg-slate-800', 'border-slate-600');
+                txt.textContent = 'Favorit';
+            }
+        }
+
+        function toggleFavoriteFromPlayer() {
+            if (!currentPlayerChannel) return;
+            toggleFavorite(currentPlayerChannel.id);
+            updatePlayerFavButton();
+        }
+
+        function toggleFavorite(channelId) {
+            if (favorites.has(channelId)) {
+                favorites.delete(channelId);
+            } else {
+                favorites.add(channelId);
+            }
+            saveToStorage();
+            filterChannels();
+        }
+
+        function copyStreamURL() {
+            if (!currentPlayerChannel) return;
+            navigator.clipboard.writeText(currentPlayerChannel.url).then(() => {
+                showToast('URL disalin ke clipboard');
+            }).catch(() => {
+                prompt('Salin URL ini:', currentPlayerChannel.url);
+            });
+        }
+
+        function openInVLC() {
+            if (!currentPlayerChannel) return;
+            const url = currentPlayerChannel.url;
+            
+            // Try vlc:// protocol (works on some systems)
+            const vlcScheme = `vlc://${url}`;
+            window.open(vlcScheme, '_blank');
+            
+            // Fallback instruction
+            setTimeout(() => {
+                showToast('Jika tidak terbuka otomatis, buka VLC → Media → Open Network Stream dan paste URL', 'info');
+            }, 1200);
+        }
+
+        async function togglePiP() {
+            const video = document.getElementById('video-player');
+            if (!video) return;
+            
+            try {
+                if (document.pictureInPictureElement) {
+                    await document.exitPictureInPicture();
+                } else {
+                    await video.requestPictureInPicture();
+                }
+            } catch (err) {
+                showToast('Picture-in-Picture tidak didukung di browser ini', 'error');
+            }
+        }
+
+        // ==================== ADD / EDIT CHANNEL ====================
+        let editingChannelId = null;
+
+        function showAddChannelModal(channel = null) {
+            const modal = document.getElementById('add-modal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            
+            editingChannelId = channel ? channel.id : null;
+            document.getElementById('add-modal-title').textContent = channel ? 'Edit Channel' : 'Tambah Channel Baru';
+            document.getElementById('save-channel-btn').textContent = channel ? 'Simpan Perubahan' : 'Simpan Channel';
+            
+            if (channel) {
+                document.getElementById('channel-name').value = channel.name || '';
+                document.getElementById('channel-url').value = channel.url || '';
+                document.getElementById('channel-category').value = channel.group || 'Umum';
+                document.getElementById('channel-country').value = channel.country || 'Global';
+                document.getElementById('channel-logo').value = channel.logo || '';
+            } else {
+                document.getElementById('channel-name').value = '';
+                document.getElementById('channel-url').value = '';
+                document.getElementById('channel-category').value = 'Umum';
+                document.getElementById('channel-country').value = 'Global';
+                document.getElementById('channel-logo').value = '';
+            }
+        }
+
+        function closeAddModal() {
+            const modal = document.getElementById('add-modal');
+            modal.classList.remove('flex');
+            modal.classList.add('hidden');
+            editingChannelId = null;
+        }
+
+        function saveChannelFromModal() {
+            const name = document.getElementById('channel-name').value.trim();
+            const url = document.getElementById('channel-url').value.trim();
+            const group = document.getElementById('channel-category').value.trim() || 'Umum';
+            const country = document.getElementById('channel-country').value.trim() || 'Global';
+            const logo = document.getElementById('channel-logo').value.trim();
+            
+            if (!name || !url) {
+                showToast('Nama dan URL wajib diisi', 'error');
+                return;
+            }
+            
+            if (editingChannelId) {
+                // Edit
+                const idx = channels.findIndex(c => c.id === editingChannelId);
+                if (idx >= 0) {
+                    channels[idx].name = name;
+                    channels[idx].url = url;
+                    channels[idx].group = group;
+                    channels[idx].country = country;
+                    channels[idx].logo = logo;
+                    channels[idx].status = channels[idx].status || 'unknown';
+                }
+                showToast('Channel diperbarui');
+            } else {
+                // New
+                const newChannel = {
+                    id: 'ch_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6),
+                    name,
+                    url,
+                    group,
+                    country,
+                    logo,
+                    status: 'unknown',
+                    lastChecked: null
+                };
+                channels.unshift(newChannel);
+                showToast('Channel berhasil ditambahkan');
+            }
+            
+            saveToStorage();
+            closeAddModal();
+            renderCategories();
+            filterChannels();
+            updateStats();
+        }
+
+        function editChannel(channelId) {
+            const channel = channels.find(c => c.id === channelId);
+            if (channel) showAddChannelModal(channel);
+        }
+
+        function deleteChannel(channelId) {
+            if (!confirm('Hapus channel ini?')) return;
+            channels = channels.filter(c => c.id !== channelId);
+            favorites.delete(channelId);
+            saveToStorage();
+            renderCategories();
+            filterChannels();
+            updateStats();
+            showToast('Channel dihapus');
+        }
+
+        // ==================== IMPORT ====================
+        function showImportModal() {
+            document.getElementById('import-modal').classList.remove('hidden');
+            document.getElementById('import-modal').classList.add('flex');
+            document.getElementById('import-url').focus();
+            document.getElementById('import-url').select();
+        }
+
+        function closeImportModal() {
+            const m = document.getElementById('import-modal');
+            m.classList.remove('flex');
+            m.classList.add('hidden');
+        }
+
+        async function importFromURL(customUrl = null) {
+            const urlInput = document.getElementById('import-url');
+            const url = customUrl || urlInput.value.trim();
+            
+            if (!url) {
+                showToast('Masukkan URL playlist', 'error');
+                return;
+            }
+            
+            closeImportModal();
+            showToast('Mengunduh dan memproses playlist...', 'info');
+            
+            try {
+                const res = await fetch(url, { 
+                    mode: 'cors',
+                    // Some public raw github support cors
+                });
+                
+                if (!res.ok) throw new Error('Gagal mengambil playlist. Coba jalankan via http.server atau gunakan CORS proxy.');
+                
+                const text = await res.text();
+                const parsed = parseM3U(text);
+                
+                if (parsed.length === 0) {
+                    showToast('Tidak ada channel valid ditemukan di playlist', 'error');
+                    return;
+                }
+                
+                let added = 0;
+                const existingUrls = new Set(channels.map(c => c.url));
+                
+                parsed.forEach(item => {
+                    if (!item.url || existingUrls.has(item.url)) return;
+                    
+                    const newCh = {
+                        id: 'ch_' + Date.now() + '_' + Math.random().toString(36).substr(2, 7),
+                        name: item.name || 'Channel Tanpa Nama',
+                        url: item.url,
+                        group: item.group || 'Umum',
+                        country: item.country || 'Global',
+                        logo: item.logo || '',
+                        status: 'unknown',
+                        lastChecked: null
+                    };
+                    channels.push(newCh);
+                    added++;
+                });
+                
+                saveToStorage();
+                renderCategories();
+                filterChannels();
+                updateStats();
+                
+                showToast(`${added} channel baru ditambahkan (${parsed.length} ditemukan)`, 'success');
+                
+                // Auto check a few new ones
+                if (added > 0 && settings.autoCheckOnLoad) {
+                    setTimeout(() => {
+                        const newest = channels.slice(0, Math.min(12, added));
+                        newest.forEach(async (ch, i) => {
+                            await new Promise(r => setTimeout(r, i * 180));
+                            const idx = channels.findIndex(c => c.id === ch.id);
+                            if (idx >= 0) {
+                                const st = await checkStreamStatus(channels[idx]);
+                                channels[idx].status = st;
+                                if (i % 3 === 0) {
+                                    filterChannels();
+                                    updateStats();
+                                }
+                            }
+                        });
+                    }, 900);
+                }
+                
+            } catch (err) {
+                console.error(err);
+                showToast('Gagal impor: ' + (err.message || 'Cek koneksi / CORS / URL valid'), 'error');
+                
+                // Offer fallback: user can add manually
+                setTimeout(() => {
+                    if (confirm('Impor gagal. Apakah ingin menambahkan channel secara manual saja?')) {
+                        showAddChannelModal();
+                    }
+                }, 900);
+            }
+        }
+
+        function quickImport(url, label) {
+            showToast(`Mengimpor ${label}...`, 'info');
+            // Directly import without opening modal
+            const origUrl = document.getElementById('import-url').value;
+            document.getElementById('import-url').value = url;
+            
+            importFromURL(url).finally(() => {
+                // restore if needed, but modal is closed anyway
+            });
+        }
+
+        // ==================== INDONESIA & ASIA PACK (added by Grok) ====================
+        function loadIndonesiaAsiaPack() {
+            const bundled = [
+                {
+                    name: "TVRI Nasional",
+                    url: "http://ott.tvri.co.id/Content/HLS/Live/Channel(TVRINASIONAL)/index.m3u8",
+                    group: "Berita",
+                    country: "ID"
+                },
+                {
+                    name: "TVRI Sport",
+                    url: "http://ott.tvri.co.id/Content/HLS/Live/Channel(TVRISPORT)/index.m3u8",
+                    group: "Olahraga",
+                    country: "ID"
+                },
+                {
+                    name: "TVRI World",
+                    url: "http://ott.tvri.co.id/Content/HLS/Live/Channel(TVRIWORLD)/index.m3u8",
+                    group: "Internasional",
+                    country: "ID"
+                },
+                {
+                    name: "Kompas TV (Public)",
+                    url: "https://livestreaming.kompas.tv/live/kompastv.m3u8",
+                    group: "Berita",
+                    country: "ID"
+                },
+                {
+                    name: "NASA TV Public (Asia)",
+                    url: "https://ntv1.akamaized.net/hls/live/2014075/NASA-NTV1-HLS/master.m3u8",
+                    group: "Sains & Antariksa",
+                    country: "Global"
+                },
+                {
+                    name: "NHK World (Jepang)",
+                    url: "https://nhkworld.webcdn.stream.ne.jp/www11/nhkworld-tv/domestic/2639421/live.m3u8",
+                    group: "Berita",
+                    country: "JP"
+                },
+                {
+                    name: "Arirang TV (Korea)",
+                    url: "https://worldlive-ios.arirang.co.kr/cdnlive-hls/arirangtvworld.m3u8",
+                    group: "Berita",
+                    country: "KR"
+                },
+                {
+                    name: "DD News (India)",
+                    url: "https://d1g8t0f3v0v4l0.cloudfront.net/live/ddnews/master.m3u8",
+                    group: "Berita",
+                    country: "IN"
+                }
+            ];
+
+            let added = 0;
+            const existingUrls = new Set(channels.map(c => c.url));
+
+            bundled.forEach(item => {
+                if (existingUrls.has(item.url)) return;
+
+                const newCh = {
+                    id: 'ch_pack_' + Date.now() + Math.random().toString(36).substr(2, 6),
+                    name: item.name,
+                    url: item.url,
+                    group: item.group,
+                    country: item.country,
+                    logo: '',
+                    status: 'unknown',
+                    lastChecked: null
+                };
+                channels.unshift(newCh);
+                added++;
+            });
+
+            if (added > 0) {
+                saveToStorage();
+                renderCategories();
+                filterChannels();
+                updateStats();
+                showToast(`${added} channel Indonesia & Asia ditambahkan (paket starter). Gunakan Impor untuk ribuan channel lagi.`, 'success');
+                
+                // Auto check the new ones
+                setTimeout(() => {
+                    bundled.forEach(async (item, i) => {
+                        const ch = channels.find(c => c.url === item.url);
+                        if (ch) {
+                            const idx = channels.findIndex(c => c.id === ch.id);
+                            if (idx >= 0) {
+                                const st = await checkStreamStatus(channels[idx]);
+                                channels[idx].status = st;
+                                if (i % 2 === 0) {
+                                    filterChannels();
+                                    updateStats();
+                                }
+                            }
+                        }
+                    });
+                }, 800);
+            } else {
+                showToast('Paket Indonesia & Asia sudah ada di daftar Anda.', 'info');
+            }
+        }
+
+        // ==================== SPORTS ASIA (to increase live sports options) ====================
+        function loadSportsAsiaPack() {
+            showToast('Memuat Sports Asia... Mengimpor kategori Sports untuk hasil terbaik.', 'info');
+            
+            // Import the official sports category - this has the most sports channels from Asia and world
+            quickImport('https://iptv-org.github.io/iptv/categories/sports.m3u', 'Sports Global & Asia');
+
+            // Add real known public sports channels (TVRI Sport is one of the few reliable public ones)
+            let added = 0;
+            const existingUrls = new Set(channels.map(c => c.url));
+
+            const realSports = [
+                {
+                    name: "TVRI Sport Indonesia",
+                    url: "http://ott.tvri.co.id/Content/HLS/Live/Channel(TVRISPORT)/index.m3u8",
+                    group: "Olahraga",
+                    country: "ID"
+                }
+            ];
+
+            realSports.forEach(item => {
+                if (existingUrls.has(item.url)) return;
+                const newCh = {
+                    id: 'ch_sport_' + Date.now() + Math.random().toString(36).substr(2, 6),
+                    name: item.name,
+                    url: item.url,
+                    group: item.group,
+                    country: item.country,
+                    logo: '',
+                    status: 'unknown',
+                    lastChecked: null
+                };
+                channels.unshift(newCh);
+                added++;
+            });
+
+            if (added > 0) {
+                saveToStorage();
+                renderCategories();
+                filterChannels();
+                updateStats();
+            }
+
+            setTimeout(() => {
+                showToast('Sports playlist diimpor! Klik "Periksa Status", filter "Hanya yang Live", lalu cari kata "sport", "football", "cricket", "badminton", atau "olahraga".', 'success');
+            }, 3000);
+        }
+
+        function filterSportsAfterImport() {
+            setTimeout(() => {
+                const search = document.getElementById('search-input');
+                if (search) {
+                    search.value = 'sport';
+                    filterChannels();
+                }
+                showToast('Difilter ke sports. Periksa status untuk lihat yang benar-benar LIVE sekarang.', 'info');
+            }, 2500);
+        }
+
+        // ==================== EXPORT ====================
+        function exportToM3U() {
+            if (channels.length === 0) {
+                showToast('Tidak ada channel untuk diexport', 'error');
+                return;
+            }
+            
+            let m3u = '#EXTM3U\n# Generated by Asindu Live World\n';
+            
+            channels.forEach(ch => {
+                let extinf = `#EXTINF:-1`;
+                if (ch.logo) extinf += ` tvg-logo="${ch.logo}"`;
+                if (ch.group) extinf += ` group-title="${ch.group}"`;
+                if (ch.country) extinf += ` tvg-country="${ch.country}"`;
+                extinf += `,${ch.name}\n`;
+                m3u += extinf + ch.url + '\n';
+            });
+            
+            const blob = new Blob([m3u], { type: 'text/plain' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = `asindu-live-world-playlist-${new Date().toISOString().slice(0,10)}.m3u`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            
+            showToast(`Berhasil export ${channels.length} channel ke .m3u`);
+        }
+
+        // ==================== SETTINGS ====================
+        function showSettingsModal() {
+            const modal = document.getElementById('settings-modal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            
+            document.getElementById('settings-auto-refresh').value = settings.autoRefreshInterval || '0';
+            document.getElementById('settings-auto-check-onload').checked = !!settings.autoCheckOnLoad;
+        }
+
+        function closeSettingsModal() {
+            const m = document.getElementById('settings-modal');
+            m.classList.remove('flex');
+            m.classList.add('hidden');
+        }
+
+        function saveSettings() {
+            const interval = parseInt(document.getElementById('settings-auto-refresh').value);
+            settings.autoRefreshInterval = interval;
+            settings.autoCheckOnLoad = document.getElementById('settings-auto-check-onload').checked;
+            
+            localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+            
+            // Restart auto timer
+            setupAutoRefresh();
+            
+            closeSettingsModal();
+            showToast('Pengaturan disimpan');
+        }
+
+        function setupAutoRefresh() {
+            if (autoRefreshTimer) {
+                clearInterval(autoRefreshTimer);
+                autoRefreshTimer = null;
+            }
+            
+            if (settings.autoRefreshInterval > 0) {
+                autoRefreshTimer = setInterval(() => {
+                    if (document.visibilityState === 'visible' && channels.length > 0) {
+                        refreshAllStatuses(Math.min(35, channels.length));
+                    }
+                }, settings.autoRefreshInterval);
+            }
+        }
+
+        // ==================== INITIAL DATA (STARTER CHANNELS) ====================
+        function loadStarterChannels() {
+            // Only if no channels saved
+            if (channels.length > 0) return;
+            
+            const starters = [
+                {
+                    id: 'starter_nasa',
+                    name: 'NASA TV Public',
+                    url: 'https://ntv1.akamaized.net/hls/live/2014075/NASA-NTV1-HLS/master.m3u8',
+                    group: 'Sains & Antariksa',
+                    country: 'Global',
+                    logo: '',
+                    status: 'live',
+                    lastChecked: Date.now()
+                },
+                {
+                    id: 'starter_tvri',
+                    name: 'TVRI Nasional (Indonesia)',
+                    url: 'http://ott.tvri.co.id/Content/HLS/Live/Channel(TVRINASIONAL)/index.m3u8',
+                    group: 'Berita',
+                    country: 'ID',
+                    logo: '',
+                    status: 'unknown',
+                    lastChecked: null
+                },
+                {
+                    id: 'starter_kompas',
+                    name: 'Kompas TV (Indonesia)',
+                    url: 'https://livestreaming.kompas.tv/live/kompastv.m3u8',
+                    group: 'Berita',
+                    country: 'ID',
+                    logo: '',
+                    status: 'unknown',
+                    lastChecked: null
+                },
+                {
+                    id: 'starter_nhk',
+                    name: 'NHK World (Jepang)',
+                    url: 'https://nhkworld.webcdn.stream.ne.jp/www11/nhkworld-tv/domestic/2639421/live.m3u8',
+                    group: 'Berita',
+                    country: 'JP',
+                    logo: '',
+                    status: 'unknown',
+                    lastChecked: null
+                },
+                {
+                    id: 'starter_test1',
+                    name: 'Apple HLS Test Stream',
+                    url: 'https://devstreaming-cdn.apple.com/videos/streaming/examples/img_bipbop_adv_example_fmp4/master.m3u8',
+                    group: 'Test / Demo',
+                    country: 'Global',
+                    logo: '',
+                    status: 'unknown',
+                    lastChecked: null
+                }
+            ];
+            
+            channels = starters;
+            saveToStorage();
+        }
+
+        // ==================== KEYBOARD & MISC ====================
+        function setupKeyboardShortcuts() {
+            document.addEventListener('keydown', (e) => {
+                // Global search focus
+                if (e.key === '/' && document.activeElement.tagName === 'BODY') {
+                    e.preventDefault();
+                    document.getElementById('search-input').focus();
+                }
+                
+                if (e.key === 'Escape') {
+                    // Close modals in order
+                    const player = document.getElementById('player-modal');
+                    const addM = document.getElementById('add-modal');
+                    const impM = document.getElementById('import-modal');
+                    const setM = document.getElementById('settings-modal');
+                    
+                    if (!player.classList.contains('hidden')) {
+                        closePlayer();
+                    } else if (!addM.classList.contains('hidden')) {
+                        closeAddModal();
+                    } else if (!impM.classList.contains('hidden')) {
+                        closeImportModal();
+                    } else if (!setM.classList.contains('hidden')) {
+                        closeSettingsModal();
+                    }
+                }
+                
+                // Quick refresh
+                if (e.metaKey && e.key.toLowerCase() === 'r' && document.activeElement.tagName === 'BODY') {
+                    e.preventDefault();
+                    refreshAllStatuses(30);
+                }
+            });
+            
+            // Search input hint
+            const search = document.getElementById('search-input');
+            search.placeholder = 'Cari channel... (tekan / untuk fokus)';
+        }
+
+        function clearAllData() {
+            if (!confirm('Hapus SEMUA channel, favorit, dan pengaturan? Tindakan ini tidak bisa dibatalkan.')) return;
+            
+            localStorage.removeItem(STORAGE_KEY);
+            localStorage.removeItem(FAVORITES_KEY);
+            localStorage.removeItem(SETTINGS_KEY);
+            
+            channels = [];
+            favorites = new Set();
+            settings = { autoRefreshInterval: 0, autoCheckOnLoad: true };
+            
+            renderCategories();
+            filterChannels();
+            updateStats();
+            
+            showToast('Semua data dihapus. Muat ulang halaman untuk data starter.', 'info');
+        }
+
+        // ==================== MAIN BOOT ====================
+        function initializeApp() {
+            initTailwind();
+            
+            loadFromStorage();
+            loadStarterChannels();
+            
+            // Initial render
+            renderCategories();
+            filterChannels();
+            updateStats();
+            
+            // Category search listener (to prevent long scrolling lists)
+            const catSearch = document.getElementById('cat-search');
+            if (catSearch) {
+                catSearch.addEventListener('input', () => {
+                    renderCategories(catSearch.value);
+                });
+            }
+            
+            // Set initial filter active
+            document.getElementById('filter-all').classList.add('nav-active');
+            
+            // Attractive Support Popup - show 2 seconds after opening, reappears every 6 hours
+            setTimeout(() => {
+                showSupportPopup();
+            }, 2000); // 2 seconds delay
+            
+            // Setup keyboard
+            setupKeyboardShortcuts();
+            
+            // Settings
+            if (settings.autoRefreshInterval > 0) {
+                setupAutoRefresh();
+            }
+            
+            // Auto check a few on load
+            if (settings.autoCheckOnLoad && channels.length > 0) {
+                setTimeout(async () => {
+                    const toProbe = channels.slice(0, Math.min(18, channels.length));
+                    for (let i = 0; i < toProbe.length; i++) {
+                        const ch = toProbe[i];
+                        const realIdx = channels.findIndex(c => c.id === ch.id);
+                        if (realIdx < 0) continue;
+                        
+                        const st = await checkStreamStatus(channels[realIdx]);
+                        channels[realIdx].status = st;
+                        
+                        if (i % 3 === 0 || i === toProbe.length - 1) {
+                            filterChannels();
+                            updateStats();
+                        }
+                    }
+                    saveToStorage();
+                }, 1100);
+            }
+            
+            // Welcome toast for first time
+            if (channels.length <= 4) {
+                setTimeout(() => {
+                    showToast('Selamat datang di Asindu Live World! Gunakan tombol "Impor Playlist" atau "Muat Paket Indonesia & Asia".', 'info');
+                }, 4800);
+            }
+            
+            // Make sure search triggers filter
+            const searchInput = document.getElementById('search-input');
+            searchInput.addEventListener('input', debounceFilter);
+            
+            // Bonus: allow drag & drop M3U file on body (advanced)
+            document.body.addEventListener('dragover', (e) => {
+                e.preventDefault();
+            });
+            document.body.addEventListener('drop', async (e) => {
+                e.preventDefault();
+                const file = e.dataTransfer.files[0];
+                if (!file || !file.name.match(/\.(m3u|m3u8)$/i)) {
+                    showToast('Hanya file .m3u / .m3u8 yang didukung', 'error');
+                    return;
+                }
+                
+                const text = await file.text();
+                const parsed = parseM3U(text);
+                let added = 0;
+                const existing = new Set(channels.map(c => c.url));
+                
+                parsed.forEach(p => {
+                    if (p.url && !existing.has(p.url)) {
+                        channels.push({
+                            id: 'ch_' + Date.now() + Math.random().toString(36).slice(2),
+                            name: p.name || 'Channel',
+                            url: p.url,
+                            group: p.group || 'Umum',
+                            country: p.country || 'Global',
+                            logo: p.logo || '',
+                            status: 'unknown'
+                        });
+                        added++;
+                    }
+                });
+                
+                if (added > 0) {
+                    saveToStorage();
+                    renderCategories();
+                    filterChannels();
+                    updateStats();
+                    showToast(`${added} channel dari file ditambahkan`, 'success');
+                }
+            });
+            
+            // Final polish
+            console.log('%c[Asindu Live World] Aplikasi siap digunakan. Perfect live TV player initialized.', 'color:#64748b');
+        }
+        
+        // Boot
+        window.onload = initializeApp;
+        
+        // Expose a few helpers for power users (console)
+        window.AsinduLiveWorld = {
+            getChannels: () => channels,
+            forceStatusCheckAll: () => refreshAllStatuses(999),
+            addChannel: (name, url) => {
+                channels.unshift({id: 'ch_console_' + Date.now(), name, url, group: 'Manual', country: 'Global', logo: '', status: 'unknown'});
+                saveToStorage();
+                filterChannels(); updateStats();
+            }
+        };
+        // Backward compatibility
+        window.LiveWorld = window.AsinduLiveWorld;
+
+        // ==================== SUPPORT POPUP (Dukung Saya) ====================
+        function showSupportPopup() {
+            // Permanent never-show flag
+            if (localStorage.getItem('asindu_support_never')) return;
+
+            const lastShownStr = localStorage.getItem('asindu_support_last_shown');
+            const now = Date.now();
+            const sixHours = 6 * 60 * 60 * 1000; // 6 hours in ms
+
+            if (lastShownStr) {
+                const lastShown = parseInt(lastShownStr, 10);
+                if ((now - lastShown) < sixHours) {
+                    return; // still within 6-hour cooldown
+                }
+            }
+
+            const existing = document.getElementById('support-popup');
+            if (existing) existing.remove();
+
+            // Record that we are showing it now
+            localStorage.setItem('asindu_support_last_shown', now.toString());
+
+            const popup = document.createElement('div');
+            popup.id = 'support-popup';
+            popup.className = 'fixed inset-0 bg-black/70 backdrop-blur-sm z-[130] flex items-center justify-center p-4';
+            
+            popup.innerHTML = `
+                <div onclick="event.target.closest('#support-popup').remove()" class="absolute inset-0"></div>
+                
+                <div onclick="event.stopImmediatePropagation()" 
+                     class="relative w-full max-w-md bg-slate-900 border border-slate-700 rounded-3xl overflow-hidden shadow-2xl modal animate-[modalPop_0.3s_ease-out]">
+                    
+                    <!-- Attractive Header -->
+                    <div class="bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 px-6 py-5 text-white relative">
+                        <button onclick="closeSupportPopup(true)" 
+                                class="absolute top-3 right-3 text-white/80 hover:text-white text-2xl leading-none w-8 h-8 flex items-center justify-center">
+                            &times;
+                        </button>
+                        
+                        <div class="flex items-center gap-x-3">
+                            <div class="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center text-3xl">
+                                ❤️
+                            </div>
+                            <div>
+                                <div class="font-display text-2xl font-semibold tracking-tight">Dukung Saya</div>
+                                <div class="text-sm text-white/80 -mt-0.5">Asindu Live World</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="p-6 text-center">
+                        <p class="text-slate-300 mb-5">
+                            Terima kasih telah menggunakan <strong>Asindu Live World</strong>!<br>
+                            Jika Anda menyukai aplikasi ini, dukung saya dengan mengikuti di sosial media.
+                        </p>
+
+                        <!-- Social Buttons -->
+                        <div class="flex flex-col gap-3">
+                            <a href="https://www.instagram.com/rzkyrmdhn03" target="_blank" rel="noopener"
+                               class="flex items-center justify-center gap-x-3 bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 text-white font-medium py-3.5 px-5 rounded-2xl transition-all active:scale-[0.985]">
+                                <i class="fa-brands fa-instagram text-xl"></i>
+                                <span>Ikuti di Instagram</span>
+                            </a>
+                            
+                            <a href="https://www.facebook.com/ramestwood" target="_blank" rel="noopener"
+                               class="flex items-center justify-center gap-x-3 bg-[#1877F2] hover:bg-[#166FE0] text-white font-medium py-3.5 px-5 rounded-2xl transition-all active:scale-[0.985]">
+                                <i class="fa-brands fa-facebook text-xl"></i>
+                                <span>Ikuti di Facebook</span>
+                            </a>
+                        </div>
+
+                        <div class="mt-5 text-xs text-slate-500">
+                            Dukungan Anda sangat berarti untuk pengembangan aplikasi ini.
+                        </div>
+                    </div>
+
+                    <!-- Footer Actions -->
+                    <div class="px-6 pb-5 flex items-center justify-between text-xs">
+                        <button onclick="closeSupportPopup(true)" 
+                                class="text-slate-400 hover:text-slate-200 transition-colors">
+                            Jangan tampilkan lagi
+                        </button>
+                        
+                        <button onclick="closeSupportPopup(false)" 
+                                class="px-4 py-1.5 bg-slate-800 hover:bg-slate-700 rounded-xl text-slate-300">
+                            Tutup
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(popup);
+            
+            // Auto close animation hint
+            setTimeout(() => {
+                popup.style.transition = 'opacity 0.2s';
+            }, 100);
+        }
+
+        function closeSupportPopup(dontShowAgain = false) {
+            const popup = document.getElementById('support-popup');
+            if (!popup) return;
+            
+            if (dontShowAgain) {
+                localStorage.setItem('asindu_support_never', 'true');
+            }
+            // Note: we already recorded the "last shown" timestamp when the popup was displayed
+            
+            popup.style.opacity = '0';
+            setTimeout(() => {
+                popup.remove();
+            }, 180);
+        }
+
+        // ==================== ABOUT MODAL (Asindu Live World) ====================
+        function showAboutModal() {
+            const existing = document.getElementById('about-modal');
+            if (existing) existing.remove();
+
+            const modal = document.createElement('div');
+            modal.id = 'about-modal';
+            modal.className = 'fixed inset-0 bg-black/80 z-[120] flex items-center justify-center p-4';
+            modal.innerHTML = `
+                <div onclick="event.target.closest('#about-modal').remove()" class="absolute inset-0"></div>
+                <div onclick="event.stopImmediatePropagation()" class="relative w-full max-w-md bg-slate-900 border border-slate-700 rounded-3xl p-6 text-sm">
+                    <div class="flex justify-between items-start mb-4">
+                        <div>
+                            <div class="flex items-center gap-x-3">
+                                <div class="w-10 h-10 bg-blue-600 rounded-2xl flex items-center justify-center">
+                                    <i class="fa-solid fa-satellite text-white"></i>
+                                </div>
+                                <div>
+                                    <div class="font-display text-2xl font-semibold">Asindu Live World</div>
+                                    <div class="text-xs text-slate-400 -mt-0.5">Powered by Asindu</div>
+                                </div>
+                            </div>
+                        </div>
+                        <button onclick="document.getElementById('about-modal').remove()" class="text-2xl text-slate-400 hover:text-white leading-none">&times;</button>
+                    </div>
+
+                    <div class="space-y-3 text-slate-300">
+                        <p>Aplikasi pemutar siaran TV langsung gratis dari seluruh dunia. Dibuat untuk kemudahan menonton channel publik, terutama Indonesia dan Asia.</p>
+                        
+                        <div class="pt-2 border-t border-slate-700">
+                            <div class="text-xs text-slate-400 mb-1">PERUSAHAAN</div>
+                            <div class="font-semibold text-white">Asindu Live World</div>
+                        </div>
+
+                        <div>
+                            <div class="text-xs text-slate-400 mb-1">Fitur Utama</div>
+                            <ul class="list-disc pl-5 text-xs space-y-0.5 text-slate-400">
+                                <li>Status LIVE / OFFLINE real-time</li>
+                                <li>Import playlist publik (iptv-org, dll.)</li>
+                                <li>Player HLS profesional + PiP</li>
+                                <li>Paket Indonesia & Asia siap pakai</li>
+                            </ul>
+                        </div>
+
+                        <div class="pt-3 border-t border-slate-700 text-[10px] text-slate-500">
+                            Data disimpan lokal di browser Anda.<br>
+                            Hanya memutar stream publik yang Anda tambahkan. Gunakan secara bertanggung jawab.<br><br>
+                            <strong>Asindu Live World</strong> — Website ini bisa di-hosting di GitHub Pages.
+                        </div>
+                    </div>
+
+                    <div class="mt-5 flex gap-2">
+                        <button onclick="document.getElementById('about-modal').remove()" 
+                                class="flex-1 py-2.5 bg-slate-800 hover:bg-slate-700 rounded-2xl text-sm">Tutup</button>
+                        <button onclick="loadIndonesiaAsiaPack(); document.getElementById('about-modal').remove()" 
+                                class="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-500 rounded-2xl text-sm font-medium">Muat Paket Indonesia &amp; Asia</button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+        }
+    </script>
+</body>
+</html>
