@@ -9,6 +9,14 @@
 #EXTINF:-1 tvg-logo="" group-title="Sports" tvg-country="ID",TVRI Sport Indonesia
 http://ott.tvri.co.id/Content/HLS/Live/Channel(TVRISPORT)/index.m3u8
 
+#EXTINF:-1 tvg-logo="" group-title="Sports" tvg-country="ID",TVRI Nasional (Piala Dunia 2026)
+http://ott.tvri.co.id/Content/HLS/Live/Channel(TVRINASIONAL)/index.m3u8
+
+# Note khusus Piala Dunia 2026:
+# Di Indonesia, TVRI menyiarkan SEMUA pertandingan Piala Dunia 2026 secara GRATIS (free-to-air) di TVRI Sport & Nasional.
+# Gunakan tombol "Piala Dunia 2026 (TVRI Indonesia)" di aplikasi.
+# HANYA GUNAKAN SUMBER RESMI. Jangan pakai stream bajakan. Melanggar hukum.
+
 #EXTINF:-1 tvg-logo="" group-title="Sports" tvg-country="IN",DD Sports (India public)
 https://d1g8t0f3v0v4l0.cloudfront.net/live/ddsports/master.m3u8
 
